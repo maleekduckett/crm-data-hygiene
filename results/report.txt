@@ -1,0 +1,86 @@
+== by_table
+   table_name  records  records_with_problems  clean_pct
+     accounts     2060                    421       79.6
+     contacts     8327                   1300       84.4
+        leads     4100                    560       86.3
+opportunities     2727                    291       89.3
+
+== by_issue
+                issue_type    table_name severity fix_by                                                 rule  problems
+           unassigned_lead         leads     High RevOps                                    Lead has no owner       320
+    stale_open_opportunity opportunities     High    Rep              Open deal with a close date in the past        95
+         duplicate_account      accounts     High RevOps        Same company entered twice (the newer record)        60
+          no_contact_roles opportunities     High    Rep                           Open deal has nobody on it        50
+            missing_amount opportunities     High    Rep                              Open deal has no amount        40
+stalled_no_recent_activity opportunities     High    Rep          Late-stage deal with no activity in 35 days        30
+         no_economic_buyer opportunities     High    Rep          Open deal over $100K with no Economic Buyer        25
+ converted_without_account         leads     High RevOps Lead is Converted but links to no account or contact        20
+ close_date_before_created opportunities     High    Rep          Close date is earlier than the created date        15
+               zero_amount opportunities     High    Rep                         Open deal has an amount of 0        15
+             missing_email      contacts   Medium    Rep                                       Email is blank       330
+         duplicate_contact      contacts   Medium RevOps         Same person entered twice (the newer record)       150
+           missing_company         leads   Medium RevOps                                     Company is blank       120
+            owner_inactive      accounts   Medium RevOps               Account is owned by a rep who has left       106
+            duplicate_lead         leads   Medium RevOps        Same email submitted again (the newer record)       100
+ orphan_contact_no_account      contacts   Medium RevOps                   Contact isn't linked to an account       100
+      invalid_email_format      contacts   Medium    Rep                          Email isn't a valid address        80
+         missing_next_step opportunities   Medium    Rep                           Open deal has no next step        61
+          segment_mismatch      accounts   Medium RevOps                 Segment doesn't match employee count        50
+             shared_domain      accounts   Medium RevOps     Two different company names use the same website         1
+             missing_title      contacts      Low    Rep                                   Job title is blank       640
+          missing_industry      accounts      Low    Rep                                    Industry is blank       100
+inconsistent_country_value      accounts      Low RevOps               Country isn't written the standard way        60
+    missing_employee_count      accounts      Low    Rep                              Employee count is blank        60
+
+== by_severity
+severity  problems
+    High       670
+  Medium      1098
+     Low       860
+
+== pipeline
+ open_deals  open_amount  flagged_deals  flagged_amount
+        413   35274500.0            259      26455400.0
+
+== by_owner
+  owner_id             owner              role is_active  records  problems  high  problems_per_100
+Unassigned        Unassigned                                  420       420   320             100.0
+     U-012  Jessica Thompson Account Executive      True     1993       265    47              13.3
+     U-006      Noah Mahoney Account Executive      True     1964       218    24              11.1
+     U-010     Priya Mendoza Account Executive      True     1833       198    13              10.8
+     U-021   Victor Robinson Account Executive      True     1043       180    43              17.3
+     U-019 Isabella Anderson Account Executive      True     1069       171    48              16.0
+     U-015     Marcus Harper Account Executive      True     1138       137    21              12.0
+     U-009        Noah Owens Account Executive      True     1029       135    18              13.1
+     U-014        Laila Cruz Account Executive      True      928       126    23              13.6
+     U-016       Yara Kapoor Account Executive      True      797       112    16              14.1
+     U-011       Grace Ellis Account Executive     False      279        95     0              34.1
+     U-018     Brandon Hayes Account Executive     False      329        83     0              25.2
+     U-005         Mia Rossi Account Executive      True      683        80    15              11.7
+     U-008      Elena Dawson Account Executive      True      779        79    15              10.1
+     U-013      Ravi Simmons Account Executive      True      556        72    11              12.9
+     U-020   Ashley Robinson Account Executive      True      499        67    18              13.4
+     U-007     Rachel Kapoor Account Executive      True      527        58    12              11.0
+     U-022      Yara Jackson Account Executive      True      331        48    16              14.5
+     U-017      Lucas Santos Account Executive      True      411        39     8               9.5
+     U-023       Tyler Hayes               SDR      True      213        22     0              10.3
+     U-025      Hannah Chang               SDR      True      189        16     0               8.5
+     U-024       Hassan Shah               SDR      True      204         7     2               3.4
+
+== queue
+record_id    table_name             owner                                  problems  points  open_amount
+  O-02676 opportunities   Victor Robinson      missing_next_step, no_economic_buyer       5     392000.0
+  O-02258 opportunities      Yara Jackson      missing_next_step, no_economic_buyer       5     328000.0
+  O-02246 opportunities   Victor Robinson      missing_next_step, no_economic_buyer       5     308000.0
+  O-02573 opportunities   Ashley Robinson      missing_next_step, no_economic_buyer       5     272000.0
+  O-02639 opportunities   Victor Robinson      missing_next_step, no_economic_buyer       5     240000.0
+  O-02627 opportunities   Ashley Robinson      missing_next_step, no_economic_buyer       5     225000.0
+  O-01424 opportunities Isabella Anderson missing_next_step, stale_open_opportunity       5     219000.0
+  O-02228 opportunities   Victor Robinson missing_next_step, stale_open_opportunity       5     214000.0
+  O-01975 opportunities Isabella Anderson missing_next_step, stale_open_opportunity       5     186000.0
+  O-02495 opportunities   Victor Robinson      missing_next_step, no_economic_buyer       5     182000.0
+  O-02239 opportunities Isabella Anderson      missing_next_step, no_economic_buyer       5     163000.0
+  O-01694 opportunities Isabella Anderson missing_next_step, stale_open_opportunity       5     154000.0
+  O-02025 opportunities Isabella Anderson missing_next_step, stale_open_opportunity       5     151000.0
+  O-02175 opportunities       Yara Kapoor missing_next_step, stale_open_opportunity       5     148000.0
+  O-02544 opportunities      Yara Jackson      missing_next_step, no_economic_buyer       5     141000.0

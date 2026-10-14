@@ -1,0 +1,435 @@
+<title>CRM Hygiene</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column of cards on a dark slate ground. Summary first (takeaway, four figures),
+   then where, what and who, then the clean-up queue to work from. */
+:root {
+  --bg: #0e1217; --panel: #151a21; --panel-2: #1b222b; --line: #262e38; --line-2: #313b47;
+  --fg: #e7ecf2; --muted: #8b97a4; --faint: #5f6b78;
+  --accent: #9a8cff; --accent-soft: rgba(154, 140, 255, .14);
+  --high: #e0457b; --med: #ba8c22; --low: #3d8fe0; --ok: #3fbf8f;
+  --high-ink: #f27aa3; --med-ink: #dcae4a; --low-ink: #78b2f2; --ok-ink: #63d6a8;
+  --tip-bg: #222a34; --shadow: 0 12px 32px rgba(0, 0, 0, .45);
+  --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 14px; --r-sm: 8px;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #f5f6f9; --panel: #ffffff; --panel-2: #f1f3f7; --line: #e2e6ec; --line-2: #d3d9e1;
+  --fg: #141a22; --muted: #5d6875; --faint: #8a95a2;
+  --accent: #6553e0; --accent-soft: rgba(101, 83, 224, .1);
+  --high: #c2336f; --med: #a87a12; --low: #2f7bd0; --ok: #1f9a6c;
+  --high-ink: #b02a63; --med-ink: #8a6309; --low-ink: #2468b5; --ok-ink: #17805a;
+  --tip-bg: #ffffff; --shadow: 0 12px 32px rgba(20, 26, 34, .14);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 14px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1180px; margin-inline: auto; padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 20px; }
+.num, td.n, .mono { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+
+header { display: grid; gap: 10px; padding-bottom: 8px; }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px rgba(63, 191, 143, .15); }
+h1 { margin: 0; font-size: clamp(30px, 4.4vw, 44px); font-weight: 600; letter-spacing: -.025em; line-height: 1.05; text-wrap: balance; }
+.takeaway { margin: 0; max-width: 68ch; font-size: 16px; color: var(--muted); text-wrap: pretty; }
+.takeaway b { color: var(--fg); font-weight: 600; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: blur(10px); padding-block: 10px; }
+.seg { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.seg button { font: 500 13px var(--sans); color: var(--muted); background: none; border: 0; padding: 6px 13px; border-radius: 999px; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px; }
+.seg button:hover { color: var(--fg); }
+.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line-2); }
+.sw { width: 8px; height: 8px; border-radius: 2px; display: inline-block; flex: none; }
+select { font: 500 13px var(--sans); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px 30px 7px 13px; appearance: none; cursor: pointer; max-width: 100%;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
+.btn { font: 500 13px var(--sans); color: var(--muted); background: none; border: 1px solid transparent; border-radius: 999px; padding: 7px 12px; cursor: pointer; }
+.btn:hover { color: var(--fg); border-color: var(--line); }
+.chip-active { font: 500 12.5px var(--sans); color: var(--accent); background: var(--accent-soft); border: 0; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.spacer { flex: 1; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 12px; }
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 18px 16px; display: grid; gap: 6px; align-content: start; }
+.kpi .label { color: var(--muted); font-size: 13px; }
+.kpi .big { font-size: 34px; font-weight: 600; letter-spacing: -.03em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi .sub { color: var(--faint); font-size: 12.5px; }
+.kpi.alert .big { color: var(--high-ink); }
+.meter { height: 4px; border-radius: 4px; background: var(--panel-2); overflow: hidden; margin-top: 6px; }
+.meter i { display: block; height: 100%; border-radius: 4px; background: var(--high); }
+
+.grid2 { align-items: start; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.card-h { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.card h2 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -.01em; }
+.note { margin: 0; color: var(--muted); font-size: 13px; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 12.5px; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+
+.bars { display: grid; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: minmax(96px, 150px) 1fr 70px; gap: 12px; align-items: center; }
+.bar-row .name { font-size: 13px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-row .val { text-align: right; font-variant-numeric: tabular-nums; font-size: 13px; color: var(--muted); }
+.track { height: 10px; border-radius: 6px; background: var(--panel-2); display: flex; overflow: hidden; gap: 2px; }
+.track i { display: block; height: 100%; border-radius: 6px; }
+
+.checks { display: grid; gap: 2px; }
+.check { display: grid; grid-template-columns: 1fr minmax(80px, 34%) 54px; gap: 14px; align-items: center; padding: 9px 10px; border-radius: var(--r-sm);
+  background: none; border: 0; text-align: left; color: inherit; font: inherit; cursor: pointer; width: 100%; }
+.check:hover { background: var(--panel-2); }
+.check[aria-pressed="true"] { background: var(--accent-soft); }
+.check .t { display: grid; gap: 1px; min-width: 0; }
+.check .t b { font-weight: 500; font-size: 13.5px; }
+.check .t small { color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.check .val { text-align: right; font-variant-numeric: tabular-nums; }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 500; padding: 1px 8px; border-radius: 999px;
+  border: 1px solid var(--line-2); color: var(--muted); white-space: nowrap; }
+.pill.High { color: var(--high-ink); border-color: color-mix(in srgb, var(--high) 45%, transparent); }
+.pill.Medium { color: var(--med-ink); border-color: color-mix(in srgb, var(--med) 45%, transparent); }
+.pill.Low { color: var(--low-ink); border-color: color-mix(in srgb, var(--low) 45%, transparent); }
+.pill.gone { color: var(--high-ink); }
+.meta-line { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+.tbl-wrap { overflow: auto; max-height: 520px; border: 1px solid var(--line); border-radius: var(--r-sm); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { position: sticky; top: 0; background: var(--panel-2); color: var(--muted); font-weight: 500; text-align: left; padding: 0; white-space: nowrap; z-index: 1;
+  border-bottom: 1px solid var(--line); }
+th button { all: unset; display: block; padding: 10px 12px; cursor: pointer; width: 100%; box-sizing: border-box; }
+th button:hover { color: var(--fg); }
+th.n, td.n { text-align: right; }
+th[aria-sort="ascending"] button::after { content: " ↑"; } th[aria-sort="descending"] button::after { content: " ↓"; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tbody tr { cursor: pointer; }
+tbody tr:hover td { background: var(--panel-2); }
+tbody tr:last-child td { border-bottom: 0; }
+td .probs { display: flex; flex-wrap: wrap; gap: 4px; }
+.inbar { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.inbar i { display: block; height: 6px; border-radius: 3px; background: var(--accent); opacity: .85; }
+.search { font: 13px var(--sans); color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; min-width: 0; width: 220px; max-width: 100%; }
+.search::placeholder { color: var(--faint); }
+.empty { color: var(--muted); padding: 24px; text-align: center; }
+
+footer { color: var(--faint); font-size: 12.5px; display: grid; gap: 6px; padding-top: 8px; }
+footer a { color: var(--muted); }
+.ok-ink { color: var(--ok-ink); }
+
+#tip { position: fixed; pointer-events: none; z-index: 20; background: var(--tip-bg); color: var(--fg); border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  box-shadow: var(--shadow); padding: 8px 10px; font-size: 12.5px; max-width: 260px; display: grid; gap: 2px; }
+#tip .k { color: var(--muted); }
+.theme-toggle { margin-left: auto; }
+@media (max-width: 560px) {
+  .bar-row { grid-template-columns: 92px 1fr 58px; }
+  .check { grid-template-columns: 1fr 64px 44px; }
+  .hide-sm { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .track i, .meter i, .inbar i { transition: width .45s cubic-bezier(.2, .7, .2, 1); }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><span class="dot"></span><span id="asof">Snapshot</span><span>·</span><span>Synthetic CRM data</span>
+      <button class="btn theme-toggle" id="theme" type="button">Light mode</button></div>
+    <h1>CRM Hygiene</h1>
+    <p class="takeaway" id="takeaway">Loading…</p>
+  </header>
+
+  <div class="filters" role="group" aria-label="Filters">
+    <div class="seg" id="sev" role="group" aria-label="Severity"></div>
+    <select id="obj" aria-label="Object"></select>
+    <select id="own" aria-label="Owner"></select>
+    <button class="chip-active" id="checkChip" type="button" hidden></button>
+    <span class="spacer"></span>
+    <button class="btn" id="reset" type="button">Reset</button>
+  </div>
+
+  <section class="kpis" aria-label="Headline figures">
+    <div class="kpi"><span class="label">Records with a problem</span><span class="big" id="k1">—</span><span class="sub" id="k1s"></span></div>
+    <div class="kpi alert"><span class="label">High-severity problems</span><span class="big" id="k2">—</span><span class="sub" id="k2s"></span></div>
+    <div class="kpi alert"><span class="label">Open pipeline on flagged deals</span><span class="big" id="k3">—</span><span class="sub" id="k3s"></span>
+      <div class="meter"><i id="k3m" style="width:0"></i></div></div>
+    <div class="kpi"><span class="label">Who fixes it</span><span class="big" id="k4">—</span><span class="sub" id="k4s"></span></div>
+  </section>
+
+  <section class="grid2">
+    <div class="card" id="where">
+      <div class="card-h"><h2>Where the problems are</h2></div>
+      <p class="note">Share of each object's records with at least one problem, by worst severity.</p>
+      <div class="bars" id="objBars"></div>
+      <div class="legend" id="sevLegend"></div>
+    </div>
+    <div class="card" id="owners-card">
+      <div class="card-h"><h2>Who owns them</h2></div>
+      <p class="note">Problems per 100 records owned, so a big book isn't penalized. Click a name to filter.</p>
+      <div class="bars" id="ownBars"></div>
+    </div>
+  </section>
+
+  <section class="card" id="checks-card">
+    <div class="card-h"><h2>What's wrong</h2><span class="note" id="checksNote"></span></div>
+    <p class="note">Every check that fired, worst first. Click one to see its records in the queue.</p>
+    <div class="checks" id="checks"></div>
+  </section>
+
+  <section class="card" id="queue-card">
+    <div class="card-h"><h2>Clean-up queue</h2>
+      <input class="search" id="q" type="search" placeholder="Search ID, owner or problem" aria-label="Search the queue"></div>
+    <p class="note" id="queueNote">One row per record. Points add up per problem (High 3, Medium 2, Low 1); open deal size breaks ties.</p>
+    <div class="tbl-wrap">
+      <table id="queue">
+        <thead><tr>
+          <th data-k="id"><button type="button">Record</button></th>
+          <th data-k="table" class="hide-sm"><button type="button">Object</button></th>
+          <th data-k="owner"><button type="button">Owner</button></th>
+          <th data-k="probs"><button type="button">Problems</button></th>
+          <th data-k="points" class="n" aria-sort="descending"><button type="button">Points</button></th>
+          <th data-k="amount" class="n"><button type="button">Open deal</button></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <span id="grade"></span>
+    <span>Built from <span class="mono">results/issues.csv</span> by <span class="mono">build_dashboard.py</span>. Every record is invented.</span>
+  </footer>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+(() => {
+  const SEVS = ['High', 'Medium', 'Low'];
+  const W = { High: 3, Medium: 2, Low: 1 };
+  const OBJ = { accounts: 'Accounts', contacts: 'Contacts', leads: 'Leads', opportunities: 'Opportunities' };
+  const fmt = new Intl.NumberFormat('en-US');
+  const money = (v) => v >= 1e6 ? '$' + (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? '$' + Math.round(v / 1e3) + 'K' : '$' + fmt.format(v);
+  const pct = (a, b) => b ? (100 * a / b).toFixed(1).replace(/\.0$/, '') + '%' : '0%';
+  const label = (t) => (t.charAt(0).toUpperCase() + t.slice(1)).replaceAll('_', ' ');
+  const $ = (s) => document.querySelector(s);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const sevVar = (s) => `var(--${s === 'High' ? 'high' : s === 'Medium' ? 'med' : 'low'})`;
+
+  const owners = Object.fromEntries(DATA.owners.map((o) => [o.id, o]));
+  const issues = DATA.issues.map(([id, type, owner, amount, open]) => {
+    const [table, severity, fixBy, rule] = DATA.rules[type];
+    return { id, type, owner: owner || 'Unassigned', amount, open: !!open, table, severity, fixBy, rule };
+  });
+  const state = { sev: 'All', obj: 'All', own: 'All', check: null, q: '', sort: ['points', -1] };
+
+  // Theme: dark by default, with a switch for light.
+  const themeBtn = $('#theme');
+  const setTheme = (t) => { document.documentElement.dataset.theme = t; themeBtn.textContent = t === 'dark' ? 'Light mode' : 'Dark mode'; };
+  setTheme('dark');
+  themeBtn.addEventListener('click', () => setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+
+  // Controls
+  const sevBox = $('#sev');
+  ['All', ...SEVS].forEach((s) => {
+    const b = el('button'); b.type = 'button'; b.dataset.v = s;
+    if (s !== 'All') { const sw = el('span', 'sw'); sw.style.background = sevVar(s); b.append(sw); }
+    b.append(s); sevBox.append(b);
+    b.addEventListener('click', () => { state.sev = s; render(); });
+  });
+  const objSel = $('#obj');
+  objSel.append(new Option('All objects', 'All'), ...Object.entries(OBJ).map(([k, v]) => new Option(v, k)));
+  objSel.addEventListener('change', () => { state.obj = objSel.value; render(); });
+  const ownSel = $('#own');
+  const ownerNames = [...DATA.owners].sort((a, b) => (a.id === 'Unassigned') - (b.id === 'Unassigned') || a.name.localeCompare(b.name));
+  ownSel.append(new Option('All owners', 'All'), ...ownerNames.map((o) => new Option(o.name + (o.active === 'False' ? ' (left)' : ''), o.id)));
+  ownSel.addEventListener('change', () => { state.own = ownSel.value; render(); });
+  $('#checkChip').addEventListener('click', () => { state.check = null; render(); });
+  $('#reset').addEventListener('click', () => { Object.assign(state, { sev: 'All', obj: 'All', own: 'All', check: null, q: '' }); $('#q').value = ''; render(); });
+  $('#q').addEventListener('input', (e) => { state.q = e.target.value.trim().toLowerCase(); renderQueue(); });
+  document.querySelectorAll('#queue th').forEach((th) => th.querySelector('button').addEventListener('click', () => {
+    const k = th.dataset.k; state.sort = [k, state.sort[0] === k ? -state.sort[1] : (['points', 'amount'].includes(k) ? -1 : 1)]; renderQueue();
+  }));
+
+  // Tooltip
+  const tip = $('#tip');
+  const showTip = (e, lines) => {
+    tip.replaceChildren(...lines.map(([k, v]) => { const d = el('div'); if (k) d.append(el('span', 'k', k + '  ')); d.append(v); return d; }));
+    tip.hidden = false;
+    const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, innerHeight - tip.offsetHeight - 8);
+    tip.style.left = x + 'px'; tip.style.top = y + 'px';
+  };
+  const hideTip = () => { tip.hidden = true; };
+
+  // Filters that apply everywhere (severity, object, owner). The check filter only narrows the queue.
+  const base = () => issues.filter((i) => (state.sev === 'All' || i.severity === state.sev)
+    && (state.obj === 'All' || i.table === state.obj) && (state.own === 'All' || i.owner === state.own));
+
+  function render() {
+    sevBox.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.v === state.sev)));
+    objSel.value = state.obj; ownSel.value = state.own;
+    const chip = $('#checkChip'); chip.hidden = !state.check; chip.textContent = state.check ? label(state.check) + '  ×' : '';
+    const rows = base();
+    renderKpis(rows); renderObjects(rows); renderOwners(rows); renderChecks(rows); renderQueue();
+  }
+
+  function scopeRecords() {
+    const tables = DATA.tables.filter((t) => state.obj === 'All' || t.name === state.obj);
+    if (state.own === 'All') return tables.reduce((s, t) => s + t.records, 0);
+    const o = owners[state.own];
+    return state.obj === 'All' ? o.records : (o.byTable[state.obj] || 0);
+  }
+
+  function renderKpis(rows) {
+    const recs = new Set(rows.map((i) => i.id));
+    const total = scopeRecords();
+    $('#k1').textContent = fmt.format(recs.size);
+    $('#k1s').textContent = `${pct(recs.size, total)} of ${fmt.format(total)} records in view`;
+    const high = rows.filter((i) => i.severity === 'High');
+    $('#k2').textContent = fmt.format(high.length);
+    $('#k2s').textContent = `on ${fmt.format(new Set(high.map((i) => i.id)).size)} records`;
+    const flagged = new Map();
+    issues.filter((i) => i.open && i.severity === 'High' && (state.own === 'All' || i.owner === state.own))
+      .forEach((i) => flagged.set(i.id, i.amount));
+    const at = [...flagged.values()].reduce((a, b) => a + b, 0);
+    const openAll = state.own === 'All' ? DATA.pipeline.open_amount : (owners[state.own].openAmount || 0);
+    $('#k3').textContent = money(at);
+    $('#k3s').textContent = `${pct(at, openAll)} of ${money(openAll)} open, on ${fmt.format(flagged.size)} deals with a High problem`;
+    $('#k3m').style.width = (openAll ? 100 * at / openAll : 0) + '%';
+    const rev = rows.filter((i) => i.fixBy === 'RevOps').length;
+    $('#k4').textContent = pct(rev, rows.length) + ' RevOps';
+    $('#k4s').textContent = `${fmt.format(rev)} problems for RevOps, ${fmt.format(rows.length - rev)} for reps`;
+
+    const allRecs = new Set(issues.map((i) => i.id)).size;
+    const allTotal = DATA.tables.reduce((s, t) => s + t.records, 0);
+    const pipe = DATA.pipeline;
+    const t = $('#takeaway'); t.replaceChildren();
+    t.append(el('b', null, pct(pipe.flagged_amount, pipe.open_amount) + ' of open pipeline'),
+      ` (${money(pipe.flagged_amount)} of ${money(pipe.open_amount)}) sits on deals with a high-severity problem. `,
+      `Overall, ${fmt.format(allRecs)} of ${fmt.format(allTotal)} records (${pct(allRecs, allTotal)}) need a fix. The biggest high-severity problems are ${topHigh()}.`);
+  }
+
+  function topHigh() {
+    const c = new Map();
+    issues.filter((i) => i.severity === 'High').forEach((i) => c.set(i.type, (c.get(i.type) || 0) + 1));
+    const top = [...c.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2);
+    return top.map(([t, n]) => `${label(t).toLowerCase().replace(/y$/, 'ie')}s (${fmt.format(n)})`).join(' and ');
+  }
+
+  function renderObjects(rows) {
+    const box = $('#objBars'); box.replaceChildren();
+    const worst = new Map();
+    rows.forEach((i) => { const w = worst.get(i.id); if (!w || W[i.severity] > W[w.severity]) worst.set(i.id, i); });
+    DATA.tables.filter((t) => state.obj === 'All' || t.name === state.obj).forEach((t) => {
+      const total = state.own === 'All' ? t.records : (owners[state.own].byTable[t.name] || 0);
+      const counts = Object.fromEntries(SEVS.map((s) => [s, 0]));
+      worst.forEach((i) => { if (i.table === t.name) counts[i.severity]++; });
+      const bad = SEVS.reduce((s, k) => s + counts[k], 0);
+      const row = el('div', 'bar-row');
+      const track = el('div', 'track');
+      SEVS.forEach((s) => { if (!counts[s]) return; const i = el('i'); i.style.width = (100 * counts[s] / Math.max(total, 1)) + '%'; i.style.background = sevVar(s); track.append(i); });
+      row.append(el('span', 'name', OBJ[t.name]), track, el('span', 'val', pct(bad, total)));
+      row.addEventListener('mousemove', (e) => showTip(e, [[null, OBJ[t.name]], ['Records', fmt.format(total)],
+        ...SEVS.map((s) => [s, fmt.format(counts[s])]), ['Clean', pct(total - bad, total)]]));
+      row.addEventListener('mouseleave', hideTip);
+      box.append(row);
+    });
+    const lg = $('#sevLegend'); lg.replaceChildren(...SEVS.map((s) => { const sp = el('span'); const sw = el('span', 'sw'); sw.style.background = sevVar(s); sp.append(sw, s); return sp; }));
+  }
+
+  function renderOwners(rows) {
+    const box = $('#ownBars'); box.replaceChildren();
+    const by = new Map();
+    rows.forEach((i) => by.set(i.owner, (by.get(i.owner) || 0) + 1));
+    const list = DATA.owners.filter((o) => o.id !== 'Unassigned').map((o) => {
+      const recs = state.obj === 'All' ? o.records : (o.byTable[state.obj] || 0);
+      return { ...o, recs, probs: by.get(o.id) || 0, rate: recs ? 100 * (by.get(o.id) || 0) / recs : 0 };
+    }).filter((o) => o.recs > 0).sort((a, b) => b.rate - a.rate).slice(0, 10);
+    const max = Math.max(1, ...list.map((o) => o.rate));
+    list.forEach((o) => {
+      const row = el('div', 'bar-row'); row.style.cursor = 'pointer';
+      const nm = el('span', 'name', o.name);
+      if (o.active === 'False') { nm.textContent = ''; nm.append(o.name + ' ', el('span', 'pill gone', 'Left')); }
+      const track = el('div', 'track'); const i = el('i'); i.style.width = (100 * o.rate / max) + '%';
+      i.style.background = o.id === state.own ? 'var(--accent)' : 'color-mix(in srgb, var(--accent) 55%, var(--panel-2))'; track.append(i);
+      row.append(nm, track, el('span', 'val', o.rate.toFixed(1)));
+      row.addEventListener('click', () => { state.own = state.own === o.id ? 'All' : o.id; render(); });
+      row.addEventListener('mousemove', (e) => showTip(e, [[null, o.name], ['Role', o.role + (o.active === 'False' ? ', has left' : '')],
+        ['Records owned', fmt.format(o.recs)], ['Problems', fmt.format(o.probs)], ['Per 100 records', o.rate.toFixed(1)]]));
+      row.addEventListener('mouseleave', hideTip);
+      box.append(row);
+    });
+    const un = by.get('Unassigned') || 0;
+    if (un && state.own === 'All') box.append(el('p', 'note', `Plus ${fmt.format(un)} problems on records with no owner at all (unassigned leads and contacts with no account).`));
+    if (!list.length) box.append(el('p', 'empty', 'No owned records in this view.'));
+  }
+
+  function renderChecks(rows) {
+    const box = $('#checks'); box.replaceChildren();
+    const counts = new Map();
+    rows.forEach((i) => counts.set(i.type, (counts.get(i.type) || 0) + 1));
+    const list = [...counts.entries()].map(([type, n]) => ({ type, n, r: DATA.rules[type] }))
+      .sort((a, b) => W[b.r[1]] - W[a.r[1]] || b.n - a.n);
+    const max = Math.max(1, ...list.map((c) => c.n));
+    $('#checksNote').textContent = `${list.length} checks · ${fmt.format(rows.length)} problems`;
+    list.forEach((c) => {
+      const [table, sev, fixBy, rule] = c.r;
+      const b = el('button', 'check'); b.type = 'button'; b.setAttribute('aria-pressed', String(state.check === c.type));
+      const t = el('span', 't'); const head = el('span', 'meta-line');
+      head.append(el('b', null, label(c.type)), el('span', 'pill ' + sev, sev), el('span', 'pill', OBJ[table]), el('span', 'pill hide-sm', fixBy));
+      t.append(head, el('small', null, rule));
+      const track = el('div', 'track'); const i = el('i'); i.style.width = (100 * c.n / max) + '%'; i.style.background = sevVar(sev); track.append(i);
+      b.append(t, track, el('span', 'val', fmt.format(c.n)));
+      b.addEventListener('click', () => { state.check = state.check === c.type ? null : c.type; render(); $('#queue-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+      box.append(b);
+    });
+    if (!list.length) box.append(el('p', 'empty', 'Nothing matches these filters.'));
+  }
+
+  function renderQueue() {
+    const rows = base().filter((i) => !state.check || i.type === state.check);
+    const recs = new Map();
+    rows.forEach((i) => {
+      const r = recs.get(i.id) || { id: i.id, table: i.table, owner: i.owner, ownerName: (owners[i.owner] || { name: 'Unassigned' }).name, items: [], points: 0, amount: i.amount };
+      r.items.push(i); r.points += W[i.severity]; recs.set(i.id, r);
+    });
+    let list = [...recs.values()];
+    if (state.q) list = list.filter((r) => (r.id + ' ' + r.ownerName + ' ' + r.items.map((i) => label(i.type)).join(' ')).toLowerCase().includes(state.q));
+    const [k, dir] = state.sort;
+    const key = { id: (r) => r.id, table: (r) => r.table, owner: (r) => r.ownerName, probs: (r) => r.items.length, points: (r) => r.points, amount: (r) => r.amount }[k];
+    list.sort((a, b) => (key(a) > key(b) ? 1 : key(a) < key(b) ? -1 : 0) * dir || b.points - a.points || b.amount - a.amount || (a.id > b.id ? 1 : -1));
+    document.querySelectorAll('#queue th').forEach((th) => { if (th.dataset.k === k) th.setAttribute('aria-sort', dir > 0 ? 'ascending' : 'descending'); else th.removeAttribute('aria-sort'); });
+    const shown = list.slice(0, 200);
+    const maxAmt = Math.max(1, ...shown.map((r) => r.amount));
+    const body = $('#queue tbody'); body.replaceChildren();
+    shown.forEach((r) => {
+      const tr = el('tr');
+      const probs = el('div', 'probs');
+      r.items.sort((a, b) => W[b.severity] - W[a.severity]).forEach((i) => probs.append(el('span', 'pill ' + i.severity, label(i.type))));
+      const amt = el('td', 'n');
+      if (r.amount > 0) { const ib = el('span', 'inbar'); const bar = el('i'); bar.style.width = Math.max(3, 56 * r.amount / maxAmt) + 'px'; ib.append(bar, money(r.amount)); amt.append(ib); } else amt.textContent = '—';
+      const tdProbs = el('td'); tdProbs.append(probs);
+      tr.append(el('td', 'mono', r.id), el('td', 'hide-sm', OBJ[r.table]), el('td', null, r.ownerName), tdProbs, el('td', 'n', String(r.points)), amt);
+      tr.addEventListener('click', () => { if (r.owner !== 'Unassigned') { state.own = r.owner; render(); } });
+      body.append(tr);
+    });
+    if (!shown.length) { const tr = el('tr'); const td = el('td', 'empty', 'Nothing matches these filters.'); td.colSpan = 6; tr.append(td); body.append(tr); }
+    $('#queueNote').textContent = `${fmt.format(list.length)} records${list.length > 200 ? ', showing the top 200' : ''}. Points add up per problem (High 3, Medium 2, Low 1); open deal size breaks ties. Click a row to filter to its owner.`;
+  }
+
+  $('#asof').textContent = 'As of ' + new Date(DATA.asOf + 'T12:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  const g = DATA.grade;
+  const gr = $('#grade'); gr.append('Checked against the planted answer key: ', el('span', 'ok-ink', `${fmt.format(g.found)} of ${fmt.format(g.planted)} planted problems found`),
+    `, ${g.extra} extra flag (${g.extraNote}). Duplicates linked to the right original: ${g.dupRight} of ${g.dupTotal}.`);
+  render();
+})();
+</script>
