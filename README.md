@@ -2,7 +2,7 @@
 
 Bad CRM data costs real money. A deal with no amount skews the forecast, a lead with no owner never gets called, and a duplicate account splits one customer's history in two. This project runs 25 hygiene checks across accounts, contacts, leads and opportunities, ranks every problem by severity, and turns the results into a clean-up queue and a dashboard.
 
-It runs on the synthetic CRM data from [gtm-synthetic-data](https://github.com/maleekduckett/gtm-synthetic-data). Every record is invented.
+It runs on CRM data from gtm-synthetic-data, a private repo of data based on a fictional SaaS company. Every record is made up.
 
 **[Open the live dashboard](https://maleekduckett.github.io/crm-data-hygiene/)**
 
@@ -98,8 +98,9 @@ It's one self-contained HTML file (`docs/index.html`) with the data built in. `b
 
 ## Run it
 
+The scripts expect the gtm-synthetic-data folder next to this repo. That repo is private, so the results it produces are committed in `results/`.
+
 ```bash
-git clone https://github.com/maleekduckett/gtm-synthetic-data   # next to this repo
 pip install -r requirements.txt
 python run_checks.py
 python grade.py
